@@ -1,0 +1,88 @@
+SELECT * FROM CENSUS_DATA;
+SELECT * FROM CRIME_DATA;
+SELECT * FROM SCHOOLS;
+
+--EXERCISE 1
+
+--Question 1
+SELECT S.NAME_OF_SCHOOL, S.COMMUNITY_AREA_NAME
+FROM SCHOOLS S LEFT OUTER JOIN CENSUS_DATA CE
+ON S.COMMUNITY_AREA_NUMBER=CE.COMMUNITY_AREA_NUMBER
+WHERE CE.HARDSHIP_INDEX='98';
+
+
+--Question 2
+
+SELECT CR.CASE_NUMBER, CR.PRIMARY_TYPE, CE.COMMUNITY_AREA_NAME
+FROM CRIME_DATA CR 
+LEFT OUTER JOIN CENSUS_DATA CE
+ON CR.COMMUNITY_AREA_NUMBER=CE.COMMUNITY_AREA_NUMBER
+WHERE CR.LOCATION_DESCRIPTION LIKE 'SCHOOL%';
+
+
+--EXERCISE 2
+
+--QUESTION 1
+
+DROP VIEW ICON_FIELDS_VIEW;
+CREATE VIEW ICON_FIELDS_VIEW
+(School_Name, Safety_Rating, Family_Rating, 
+Environment_Rating,
+Instruction_Rating,
+Leaders_Rating
+) AS 
+SELECT NAME_OF_SCHOOL, Safety_Icon, Family_Involvement_Icon,
+ Environment_Icon, Instruction_Icon, Leaders_Icon 
+FROM SCHOOLS;
+
+
+SELECT * FROM ICON_FIELDS_VIEW;
+
+--EXERCISE 3
+
+--CREATING A STORED PROCEDURE
+--Receives School Id , Leaders Score
+DROP PROCEDURE UPDATE_LEADERS_SCORE;
+--#SET TERMINATOR @
+
+CREATE PROCEDURE UPDATE_LEADERS_SCORE(IN in_School_ID INTEGER,
+IN in_Leader_Score INTEGER
+)
+LANGUAGE SQL                                                -- Language used in this routine
+MODIFIES SQL DATA
+BEGIN
+ IF in_Leader_Score > 0 AND in_Leader_Score < 20 THEN                           -- Start of conditional statement
+        UPDATE SCHOOLS S
+        SET S.Leaders_Score=in_Leader_Score , S.Leaders_Icon='Very weak'
+        WHERE S.SCHOOL_ID=in_School_ID;
+        
+ ELSEIF in_Leader_Score > 20 AND in_Leader_Score < 39 THEN    
+        UPDATE SCHOOLS S
+        SET S.Leaders_Score=in_Leader_Score, S.Leaders_Icon='Weak'
+        WHERE S.SCHOOL_ID=in_School_ID;
+        
+        
+ ELSEIF in_Leader_Score > 40 AND in_Leader_Score < 59 THEN    
+        UPDATE SCHOOLS S
+        SET S.Leaders_Score=in_Leader_Score, S.Leaders_Icon='Average'
+        WHERE S.SCHOOL_ID=in_School_ID;
+
+ ELSEIF in_Leader_Score > 60 AND in_Leader_Score < 79 THEN    
+        UPDATE SCHOOLS S
+        SET S.Leaders_Score=in_Leader_Score, S.Leaders_Icon='Strong'
+        WHERE S.SCHOOL_ID=in_School_ID;
+
+
+ ELSEIF in_Leader_Score > 80 AND in_Leader_Score < 99 THEN    
+        UPDATE SCHOOLS S
+        SET S.Leaders_Score=in_Leader_Score, S.Leaders_Icon='Very strong'
+        WHERE S.SCHOOL_ID=in_School_ID;
+        
+
+ ELSE
+     COMMIT WORK;
+END IF;
+END
+@
+
+CALL UPDATE_LEADERS_SCORE(1,50)
